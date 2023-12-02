@@ -1,5 +1,5 @@
 from textual.app import ComposeResult, RenderResult
-from textual.widgets import Footer, ListItem, ListView, Label, Static
+from textual.widgets import Footer, ListItem, ListView, Label, Static, TabbedContent, Markdown
 from textual.screen import Screen
 from query import models
 
@@ -9,14 +9,19 @@ class RecipeItem(ListItem):
         self.recipe = recipe
 
 class ViewRecipeInfo(Screen):
-    def __init__(self, listitem):
+    def __init__(self, listitem: RecipeItem):
         super(Screen, self).__init__()
         self.recipe = listitem.recipe
 
-    def render(self) -> RenderResult:
-        return f"Recipe Name: {self.recipe.name} \nRecipe Description: {self.recipe.description} \nRecipe Instructions: {self.recipe.instructions}"
+    def compose(self) -> ComposeResult:
+        with TabbedContent(self.recipe.name, "Ingredients"):
+            yield Markdown(f"# {self.recipe.name} \n ## Recipe Description \n {self.recipe.description} \n ## Recipe Instructions \n {self.recipe.instructions}")
+            yield Markdown("")
+
 
 class ViewRecipes(Screen):
+    ALLOW_SELECTOR_MATCH = {'item'}
+
     def generate_items(self):
         items = []
         results = models.session.query(models.Recipe).all()
@@ -24,8 +29,8 @@ class ViewRecipes(Screen):
             items.append(RecipeItem(recipe))
         return items
 
-    def action_select_cursor(self):
-        self.push_screen(ViewRecipeInfo(ListView.Selected.item))
+    def on_list_view_selected(self, event: ListView.Selected):
+        self.app.push_screen(ViewRecipeInfo(event.item))
 
     def compose(self) -> ComposeResult:
         yield ListView(*self.generate_items())
