@@ -1,8 +1,12 @@
 from textual.app import ComposeResult, RenderResult
-from textual.widgets import Footer, Input, TextArea, Select, Button
+from textual.widgets import Footer, Input, TextArea, Select, Button, SelectionList
 from textual.containers import Horizontal
 from textual.screen import Screen, ModalScreen
 from query import models
+
+title = ''
+description = ''
+ingredients_units = {}
 
 def get_units():
     items = []
@@ -11,15 +15,20 @@ def get_units():
         items.append((unit.name, unit.id))
     return items
 
-class AddRecipes(Screen):
+class AddIngredient(Screen):
     def compose(self) -> ComposeResult:
-        yield Input(placeholder="Recipe Title", type="text")
-        yield Input(placeholder="Recipe Description", type="text")
-        yield TextArea(language="markdown")
-        yield Horizontal (
-            Input(placeholder="ingredient", type="text"),
-            Select(get_units()),
-            Button("Add Ingredient")
-        )
+        yield Input(placeholder="Ingredient", type="text", id='ingredient')
+        yield Select(get_units())
+        yield Button("Submit", variant='primary')
+
+class AddRecipes(Screen):
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == 'add_ingredient':
+            self.app.push_screen(AddIngredient())
+
+    def compose(self) -> ComposeResult:
+        yield Input(placeholder="Recipe Title", type="text", id="title")
+        yield Input(placeholder="Recipe Description", type="text", id="description")
+        yield Button("Add Ingredients", variant="default", id='add_ingredient')
         yield Footer()
 
